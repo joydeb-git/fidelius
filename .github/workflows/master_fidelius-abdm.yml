@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - fidelius-abdm
+name: Build and deploy JAR app to Azure Web App - fidelius-abdm
 
 on:
   push:
@@ -18,22 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      - name: Set up Java version
+        uses: actions/setup-java@v4
         with:
-          node-version: '24.x'
+          java-version: '11'
+          distribution: 'microsoft'
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+      - name: Build with Maven
+        run: mvn clean install
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
-          path: .
+          name: java-app
+          path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -41,25 +39,25 @@ jobs:
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
-
+  
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: java-app
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_37C3CBB2EFB34331912051C135FD65B9 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9407431C9B62437188F49375F7BC960D }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C1A4AF1C73CF411AA4F21D6D41BF4068 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5A951FD1C1EF49A2BA7E9EE96000C17D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3A2A39DF8A80482EB7660D67169C2313 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9EB08C10C5D7427D850DDD659C4F7CFA }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'fidelius-abdm'
           slot-name: 'Production'
-          package: .
+          package: '*.jar'
           
